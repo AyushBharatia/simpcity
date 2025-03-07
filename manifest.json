@@ -1,0 +1,48 @@
+{
+  "manifest_version": 3,
+  "name": "Forum Media Link Collector",
+  "version": "0.3",
+  "description": "Automatically navigate forum pages and collect media links",
+  "permissions": [
+    "storage",
+    "activeTab",
+    "scripting",
+    "tabs",
+    "<all_urls>",
+    "downloads"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png"
+    }
+  },
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": [
+        "progress-indicator-module.js",
+        "sidebar-module.js",
+        "content.js"
+      ],
+      "match_about_blank": true
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["saint-gallery-module.js", "gallery.html", "iframe-downloader.js"],
+      "matches": ["<all_urls>"]
+    } 
+  ]
+}

@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Forum Media Link Collector</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      width: 320px;
+      padding: 15px;
+      margin: 0;
+    }
+    
+    h1 {
+      font-size: 18px;
+      margin-top: 0;
+      margin-bottom: 15px;
+      color: #333;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 10px;
+    }
+    
+    .stats-container {
+      background: #f5f5f5;
+      border-radius: 5px;
+      padding: 10px;
+      margin-bottom: 15px;
+    }
+    
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 5px;
+    }
+    
+    .stat-item:last-child {
+      font-weight: bold;
+      border-top: 1px solid #ddd;
+      padding-top: 5px;
+      margin-top: 5px;
+    }
+    
+    .button-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 15px;
+    }
+    
+    button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      background-color: #4285f4;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    button:hover {
+      background-color: #3367d6;
+    }
+    
+    button:active {
+      background-color: #2a56c6;
+    }
+    
+    button.secondary {
+      background-color: #f1f1f1;
+      color: #333;
+      border: 1px solid #ccc;
+    }
+    
+    button.secondary:hover {
+      background-color: #e4e4e4;
+    }
+    
+    button.danger {
+      background-color: #ea4335;
+    }
+    
+    button.danger:hover {
+      background-color: #d33426;
+    }
+
+    button.feature {
+      background-color: #34a853;
+    }
+    
+    button.feature:hover {
+      background-color: #2d9249;
+    }
+    
+    button:disabled {
+      background-color: #cccccc;
+      color: #666666;
+      cursor: not-allowed;
+    }
+    
+    .delay-container {
+      display: flex;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    
+    .delay-container label {
+      margin-right: 10px;
+    }
+    
+    .delay-container input {
+      width: 60px;
+      padding: 5px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+    
+    .status {
+      margin-top: 10px;
+      font-style: italic;
+      color: #555;
+      font-size: 12px;
+    }
+    
+    .divider {
+      border-top: 1px solid #eee;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>Forum Media Link Collector</h1>
+  
+  <div class="stats-container">
+    <div class="stat-item">
+      <span>Saint Links:</span>
+      <span id="saint-count">0</span>
+    </div>
+    <div class="stat-item">
+      <span>File Host Links:</span>
+      <span id="file-count">0</span>
+    </div>
+    <div class="stat-item">
+      <span>RedGifs Links:</span>
+      <span id="redgifs-count">0</span>
+    </div>
+    <div class="stat-item">
+      <span>Total Links:</span>
+      <span id="total-count">0</span>
+    </div>
+  </div>
+  
+  <div class="button-group">
+    <button id="collect-btn">Collect Links on Current Page</button>
+    <button id="start-nav-btn">Start Auto-Navigation</button>
+    <button id="stop-nav-btn">Stop Auto-Navigation</button>
+  </div>
+  
+  <div class="delay-container">
+    <label for="delay-input">Delay (seconds):</label>
+    <input type="number" id="delay-input" min="1" max="30" value="3">
+  </div>
+  
+  <div class="divider"></div>
+  
+  <div class="button-group">
+    <button id="open-gallery-btn" class="feature">Open Saint Gallery</button>
+    <button id="toggle-sidebar-btn" class="secondary">Show Links Sidebar</button>
+    <button id="download-btn" class="secondary">Download All Links</button>
+    <button id="clear-btn" class="danger">Clear All Links</button>
+  </div>
+  
+  <div id="status" class="status">Ready</div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>
