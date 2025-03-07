@@ -3,171 +3,252 @@
 <head>
   <meta charset="UTF-8">
   <title>Forum Media Link Collector</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
   <style>
+    :root {
+      --primary-color: #4285f4;
+      --primary-dark: #3367d6;
+      --secondary-color: #f1f3f4;
+      --success-color: #34a853;
+      --success-dark: #2d9249;
+      --danger-color: #ea4335;
+      --danger-dark: #d33426;
+      --text-color: #202124;
+      --text-secondary: #5f6368;
+      --border-color: #dadce0;
+      --background-color: #ffffff;
+      --hover-color: #f8f9fa;
+    }
+    
     body {
-      font-family: Arial, sans-serif;
-      width: 320px;
-      padding: 15px;
+      font-family: 'Roboto', 'Segoe UI', Arial, sans-serif;
+      width: 350px;
+      padding: 16px;
       margin: 0;
+      color: var(--text-color);
+      background-color: var(--background-color);
     }
     
     h1 {
       font-size: 18px;
+      font-weight: 500;
       margin-top: 0;
-      margin-bottom: 15px;
-      color: #333;
-      border-bottom: 1px solid #ccc;
-      padding-bottom: 10px;
+      margin-bottom: 16px;
+      color: var(--text-color);
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+      display: flex;
+      align-items: center;
+    }
+    
+    h1 i {
+      margin-right: 8px;
+      color: var(--primary-color);
     }
     
     .stats-container {
-      background: #f5f5f5;
-      border-radius: 5px;
-      padding: 10px;
-      margin-bottom: 15px;
+      background: var(--secondary-color);
+      border-radius: 8px;
+      padding: 14px;
+      margin-bottom: 16px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
     }
     
     .stat-item {
       display: flex;
       justify-content: space-between;
-      margin-bottom: 5px;
+      margin-bottom: 8px;
+      font-size: 14px;
     }
     
-    .stat-item:last-child {
-      font-weight: bold;
-      border-top: 1px solid #ddd;
-      padding-top: 5px;
-      margin-top: 5px;
+    .stat-item span:first-child {
+      color: var(--text-secondary);
+    }
+    
+    .stat-item span:last-child {
+      font-weight: 500;
+    }
+    
+    .stat-item.total {
+      font-weight: 500;
+      border-top: 1px solid var(--border-color);
+      padding-top: 8px;
+      margin-top: 8px;
+      font-size: 15px;
+    }
+    
+    .stat-item.total span:first-child {
+      color: var(--text-color);
     }
     
     .button-group {
       display: flex;
       flex-direction: column;
       gap: 8px;
-      margin-bottom: 15px;
+      margin-bottom: 16px;
     }
     
     button {
-      padding: 8px 12px;
+      padding: 10px 14px;
       border: none;
-      border-radius: 4px;
-      background-color: #4285f4;
+      border-radius: 6px;
+      background-color: var(--primary-color);
       color: white;
-      font-weight: bold;
+      font-size: 14px;
+      font-weight: 500;
       cursor: pointer;
-      transition: background-color 0.2s;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    button i {
+      margin-right: 8px;
     }
     
     button:hover {
-      background-color: #3367d6;
+      background-color: var(--primary-dark);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.12);
     }
     
     button:active {
-      background-color: #2a56c6;
+      transform: translateY(1px);
     }
     
     button.secondary {
-      background-color: #f1f1f1;
-      color: #333;
-      border: 1px solid #ccc;
+      background-color: var(--secondary-color);
+      color: var(--text-color);
+      border: 1px solid var(--border-color);
     }
     
     button.secondary:hover {
-      background-color: #e4e4e4;
+      background-color: var(--hover-color);
     }
     
     button.danger {
-      background-color: #ea4335;
+      background-color: var(--danger-color);
     }
     
     button.danger:hover {
-      background-color: #d33426;
+      background-color: var(--danger-dark);
     }
 
     button.feature {
-      background-color: #34a853;
+      background-color: var(--success-color);
     }
     
     button.feature:hover {
-      background-color: #2d9249;
+      background-color: var(--success-dark);
     }
     
     button:disabled {
-      background-color: #cccccc;
-      color: #666666;
+      background-color: var(--secondary-color);
+      color: var(--text-secondary);
       cursor: not-allowed;
+      border: 1px solid var(--border-color);
+      opacity: 0.7;
+    }
+    
+    button:disabled i {
+      opacity: 0.7;
     }
     
     .delay-container {
       display: flex;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 16px;
+      background-color: var(--secondary-color);
+      padding: 10px 14px;
+      border-radius: 6px;
     }
     
     .delay-container label {
       margin-right: 10px;
+      font-size: 14px;
+      color: var(--text-secondary);
+      flex-grow: 1;
     }
     
     .delay-container input {
       width: 60px;
-      padding: 5px;
+      padding: 6px 8px;
       border-radius: 4px;
-      border: 1px solid #ccc;
+      border: 1px solid var(--border-color);
+      text-align: center;
+      font-size: 14px;
+    }
+    
+    .delay-container input:focus {
+      border-color: var(--primary-color);
+      outline: none;
     }
     
     .status {
-      margin-top: 10px;
+      margin-top: 12px;
       font-style: italic;
-      color: #555;
-      font-size: 12px;
+      color: var(--text-secondary);
+      font-size: 13px;
+      text-align: center;
+      height: 18px;
     }
     
     .divider {
-      border-top: 1px solid #eee;
-      margin: 10px 0;
+      border-top: 1px solid var(--border-color);
+      margin: 12px 0;
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.3s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
     }
   </style>
 </head>
 <body>
-  <h1>Forum Media Link Collector</h1>
+  <h1><i class="fas fa-photo-film"></i>Forum Media Link Collector</h1>
   
   <div class="stats-container">
     <div class="stat-item">
-      <span>Saint Links:</span>
+      <span><i class="fas fa-images"></i> Saint Links:</span>
       <span id="saint-count">0</span>
     </div>
     <div class="stat-item">
-      <span>File Host Links:</span>
+      <span><i class="fas fa-file-archive"></i> File Host Links:</span>
       <span id="file-count">0</span>
     </div>
     <div class="stat-item">
-      <span>RedGifs Links:</span>
+      <span><i class="fas fa-video"></i> RedGifs Links:</span>
       <span id="redgifs-count">0</span>
     </div>
-    <div class="stat-item">
-      <span>Total Links:</span>
+    <div class="stat-item total">
+      <span><i class="fas fa-link"></i> Total Links:</span>
       <span id="total-count">0</span>
     </div>
   </div>
   
   <div class="button-group">
-    <button id="collect-btn">Collect Links on Current Page</button>
-    <button id="start-nav-btn">Start Auto-Navigation</button>
-    <button id="stop-nav-btn">Stop Auto-Navigation</button>
+    <button id="collect-btn"><i class="fas fa-hand-pointer"></i>Collect Links on Current Page</button>
+    <button id="start-nav-btn"><i class="fas fa-play"></i>Start Auto-Navigation</button>
+    <button id="stop-nav-btn"><i class="fas fa-stop"></i>Stop Auto-Navigation</button>
   </div>
   
   <div class="delay-container">
-    <label for="delay-input">Delay (seconds):</label>
+    <label for="delay-input"><i class="fas fa-clock"></i> Delay between pages:</label>
     <input type="number" id="delay-input" min="1" max="30" value="3">
+    <span style="margin-left: 5px; font-size: 14px;">sec</span>
   </div>
   
   <div class="divider"></div>
   
   <div class="button-group">
-    <button id="open-gallery-btn" class="feature">Open Saint Gallery</button>
-    <button id="toggle-sidebar-btn" class="secondary">Show Links Sidebar</button>
-    <button id="download-btn" class="secondary">Download All Links</button>
-    <button id="clear-btn" class="danger">Clear All Links</button>
+    <button id="open-gallery-btn" class="feature"><i class="fas fa-photo-film"></i>Open Saint Gallery</button>
+    <button id="toggle-sidebar-btn" class="secondary"><i class="fas fa-columns"></i>Show Links Sidebar</button>
+    <button id="download-btn" class="secondary"><i class="fas fa-download"></i>Download All Links</button>
+    <button id="clear-btn" class="danger"><i class="fas fa-trash-alt"></i>Clear All Links</button>
   </div>
   
   <div id="status" class="status">Ready</div>

@@ -1,4 +1,4 @@
-// saint-gallery-module.js
+// saint-gallery-module.js - Enhanced version
 'use strict';
 
 const SaintGalleryModule = (() => {
@@ -6,6 +6,7 @@ const SaintGalleryModule = (() => {
   let currentIndex = 0;
   let saintLinks = [];
   let galleryTabId = null;
+  let isTransitioning = false;
   
   // Initialize the gallery in a new tab
   function initGallery() {
@@ -14,11 +15,9 @@ const SaintGalleryModule = (() => {
         if (!result.saintLinks || result.saintLinks.length === 0) {
           console.error('No Saint links available to view');
           
-          // Update gallery container with an error message
-          const container = document.getElementById('gallery-container');
-          if (container) {
-            container.textContent = 'No Saint links available to view';
-          }
+          // Show empty state
+          document.getElementById('gallery-container').style.display = 'none';
+          document.getElementById('no-content').style.display = 'flex';
           
           resolve(false);
           return;
@@ -27,101 +26,82 @@ const SaintGalleryModule = (() => {
         saintLinks = result.saintLinks;
         currentIndex = 0;
         galleryTabId = chrome.tabs.getCurrent(function(tab) {
-          return tab.id;
+          return tab ? tab.id : null;
         });
         
         // Create a video element to display the content
         const container = document.getElementById('gallery-container');
         if (container) {
           container.innerHTML = `
-            <iframe src="${saintLinks[0]}" width="100%" height="600px" frameborder="0" allowfullscreen></iframe>
+            <iframe src="${saintLinks[0]}" width="100%" height="90%" frameborder="0" allowfullscreen></iframe>
           `;
+          
+          // Add fade-in effect
+          const iframe = container.querySelector('iframe');
+          if (iframe) {
+            iframe.style.opacity = '0';
+            setTimeout(() => {
+              iframe.style.opacity = '1';
+            }, 100);
+          }
         }
         
         // Add the controls to the page
         injectGalleryControls(document, currentIndex, saintLinks.length);
+        
+        // Add keyboard navigation
+        setupKeyboardNavigation();
+        
         resolve(true);
       });
     });
   }
   
- // Inject gallery controls into the Saint page
-function injectGalleryControls(doc, index, totalLinks) {
+  // Create and inject gallery controls
+  function injectGalleryControls(doc, index, totalLinks) {
     // Avoid re-creating controls if they already exist
     if (doc.getElementById('saint-gallery-controls')) {
       return;
     }
     
-    // Create the control panel (same styling as before)
+    // Create the control panel
     const controlPanel = doc.createElement('div');
     controlPanel.id = 'saint-gallery-controls';
-    controlPanel.style.cssText = `
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: rgba(0, 0, 0, 0.8);
-      border-radius: 8px;
-      padding: 10px 20px;
-      display: flex;
-      gap: 15px;
-      z-index: 9999;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      align-items: center;
-    `;
     
     // Create counter display
     const counter = doc.createElement('div');
     counter.id = 'gallery-counter';
     counter.textContent = `${index + 1} / ${totalLinks}`;
-    counter.style.cssText = `
-      color: white;
-      font-family: Arial, sans-serif;
-      font-size: 14px;
-    `;
     
-    // Create navigation buttons
+    // Create navigation buttons with icons
     const prevBtn = doc.createElement('button');
-    prevBtn.textContent = 'Previous';
-    prevBtn.style.cssText = `
-      background-color: #ea4335;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 8px 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background-color 0.2s;
+    prevBtn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Previous
     `;
     prevBtn.addEventListener('click', navigateToPrev);
     
     // Create download button
     const downloadBtn = doc.createElement('button');
-    downloadBtn.textContent = 'Download';
-    downloadBtn.style.cssText = `
-      background-color: #4285f4;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 8px 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background-color 0.2s;
+    downloadBtn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M21 15V19C21 19.5304 20.7893 20.0391 20.4142 20.4142C20.0391 20.7893 19.5304 21 19 21H5C4.46957 21 3.96086 20.7893 3.58579 20.4142C3.21071 20.0391 3 19.5304 3 19V15" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M7 10L12 15L17 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+        <path d="M12 15V3" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      Download
     `;
     downloadBtn.addEventListener('click', downloadCurrentVideo);
     
     // Create next button
     const nextBtn = doc.createElement('button');
-    nextBtn.textContent = 'Next';
-    nextBtn.style.cssText = `
-      background-color: #34a853;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 8px 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background-color 0.2s;
+    nextBtn.innerHTML = `
+      Next
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
     `;
     nextBtn.addEventListener('click', navigateToNext);
     
@@ -133,163 +113,38 @@ function injectGalleryControls(doc, index, totalLinks) {
     
     // Add the control panel to the page
     doc.body.appendChild(controlPanel);
+    
+    // Add fade-in animation
+    controlPanel.style.opacity = '0';
+    setTimeout(() => {
+      controlPanel.style.opacity = '1';
+    }, 300);
   }
-  // Function to be injected into the Saint page
-  function createGalleryControls(index, totalLinks) {
-    // Avoid re-creating controls if they already exist
-    if (document.getElementById('saint-gallery-controls')) {
-      return;
-    }
-    
-    // Create the control panel
-    const controlPanel = document.createElement('div');
-    controlPanel.id = 'saint-gallery-controls';
-    controlPanel.style.cssText = `
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      background-color: rgba(0, 0, 0, 0.8);
-      border-radius: 8px;
-      padding: 10px 20px;
-      display: flex;
-      gap: 15px;
-      z-index: 9999;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-      align-items: center;
-    `;
-    
-    // Create counter display
-    const counter = document.createElement('div');
-    counter.id = 'gallery-counter';
-    counter.textContent = `${index + 1} / ${totalLinks}`;
-    counter.style.cssText = `
-      color: white;
-      font-family: Arial, sans-serif;
-      font-size: 14px;
-    `;
-    
-    // Create navigation buttons
-    const prevBtn = document.createElement('button');
-    prevBtn.textContent = 'Previous';
-    prevBtn.style.cssText = `
-      background-color: #ea4335;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 8px 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    `;
-    prevBtn.addEventListener('mouseover', () => {
-      prevBtn.style.backgroundColor = '#d33426';
-    });
-    prevBtn.addEventListener('mouseout', () => {
-      prevBtn.style.backgroundColor = '#ea4335';
-    });
-    prevBtn.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ action: 'saintGalleryPrev' });
-    });
-    
-    // Create download button
-    const downloadBtn = document.createElement('button');
-    downloadBtn.textContent = 'Download';
-    downloadBtn.style.cssText = `
-      background-color: #4285f4;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 8px 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    `;
-    downloadBtn.addEventListener('mouseover', () => {
-      downloadBtn.style.backgroundColor = '#3367d6';
-    });
-    downloadBtn.addEventListener('mouseout', () => {
-      downloadBtn.style.backgroundColor = '#4285f4';
-    });
-    downloadBtn.addEventListener('click', downloadCurrentVideo);
-    
-    // Create next button
-    const nextBtn = document.createElement('button');
-    nextBtn.textContent = 'Next';
-    nextBtn.style.cssText = `
-      background-color: #34a853;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 8px 16px;
-      font-weight: bold;
-      cursor: pointer;
-      transition: background-color 0.2s;
-    `;
-    nextBtn.addEventListener('mouseover', () => {
-      nextBtn.style.backgroundColor = '#2d9249';
-    });
-    nextBtn.addEventListener('mouseout', () => {
-      nextBtn.style.backgroundColor = '#34a853';
-    });
-    nextBtn.addEventListener('click', () => {
-      chrome.runtime.sendMessage({ action: 'saintGalleryNext' });
-    });
-    
-    // Add all elements to the control panel
-    controlPanel.appendChild(counter);
-    controlPanel.appendChild(prevBtn);
-    controlPanel.appendChild(downloadBtn);
-    controlPanel.appendChild(nextBtn);
-    
-    // Add the control panel to the page
-    document.body.appendChild(controlPanel);
-    
-    // Function to download the video
-    function downloadCurrentVideo() {
-      // Find the source element with the mp4 link
-      const sourceElement = document.querySelector('source[type="video/mp4"]');
-      if (!sourceElement) {
-        alert('Cannot find video source to download');
-        return;
+  
+  // Setup keyboard navigation
+  function setupKeyboardNavigation() {
+    document.addEventListener('keydown', (event) => {
+      if (isTransitioning) return;
+      
+      switch(event.key) {
+        case 'ArrowLeft':
+          navigateToPrev();
+          break;
+        case 'ArrowRight':
+          navigateToNext();
+          break;
+        case 'd':
+        case 'D':
+          downloadCurrentVideo();
+          break;
       }
-      
-      const videoUrl = sourceElement.getAttribute('src');
-      if (!videoUrl) {
-        alert('Cannot find video URL');
-        return;
-      }
-      
-      // Create a temporary anchor element for downloading
-      const downloadLink = document.createElement('a');
-      downloadLink.href = videoUrl;
-      
-      // Extract a filename from the URL
-      const urlParts = videoUrl.split('/');
-      const filename = urlParts[urlParts.length - 1];
-      downloadLink.download = filename;
-      
-      // Trigger the download
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      document.body.removeChild(downloadLink);
-      
-      // Provide visual feedback
-      const originalText = downloadBtn.textContent;
-      downloadBtn.textContent = 'Downloading...';
-      downloadBtn.disabled = true;
-      downloadBtn.style.backgroundColor = '#999';
-      
-      setTimeout(() => {
-        downloadBtn.textContent = originalText;
-        downloadBtn.disabled = false;
-        downloadBtn.style.backgroundColor = '#4285f4';
-      }, 2000);
-    }
+    });
   }
   
   // Navigate to the next saint link
   function navigateToNext() {
+    if (isTransitioning) return;
+    
     currentIndex++;
     
     // Loop back to the beginning if we reach the end
@@ -302,6 +157,8 @@ function injectGalleryControls(doc, index, totalLinks) {
   
   // Navigate to the previous saint link
   function navigateToPrev() {
+    if (isTransitioning) return;
+    
     currentIndex--;
     
     // Loop to the end if we go below 0
@@ -313,11 +170,11 @@ function injectGalleryControls(doc, index, totalLinks) {
   }
 
   // Function to download the current video
-function downloadCurrentVideo() {
+  function downloadCurrentVideo() {
     // Get the current iframe
     const iframe = document.querySelector('iframe');
     if (!iframe) {
-      alert('Cannot find iframe element');
+      showNotification('Cannot find iframe element', 'error');
       return;
     }
     
@@ -326,10 +183,14 @@ function downloadCurrentVideo() {
     // Provide immediate feedback
     const downloadBtn = document.querySelector('#saint-gallery-controls button:nth-child(3)');
     if (downloadBtn) {
-      const originalText = downloadBtn.textContent;
-      downloadBtn.textContent = 'Getting source...';
+      const originalHtml = downloadBtn.innerHTML;
+      downloadBtn.innerHTML = `
+        <svg class="spinner" width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="60 15"/>
+        </svg>
+        Getting source...
+      `;
       downloadBtn.disabled = true;
-      downloadBtn.style.backgroundColor = '#999';
     }
     
     // Since we can't directly access iframe content due to cross-origin restrictions,
@@ -340,42 +201,135 @@ function downloadCurrentVideo() {
     }, response => {
       if (response && response.success) {
         if (downloadBtn) {
-          downloadBtn.textContent = 'Downloaded!';
+          downloadBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20 6L9 17L4 12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Downloaded!
+          `;
           setTimeout(() => {
-            downloadBtn.textContent = originalText;
+            downloadBtn.innerHTML = originalHtml;
             downloadBtn.disabled = false;
-            downloadBtn.style.backgroundColor = '#4285f4';
-          }, 2000);
-        }
-      } else {
-        if (downloadBtn) {
-          downloadBtn.textContent = response.error || 'Download failed';
-          setTimeout(() => {
-            downloadBtn.textContent = originalText;
-            downloadBtn.disabled = false;
-            downloadBtn.style.backgroundColor = '#4285f4';
           }, 2000);
         }
         
+        showNotification('Download successful!', 'success');
+      } else {
+        if (downloadBtn) {
+          downloadBtn.innerHTML = `
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M6 6L18 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            Failed
+          `;
+          setTimeout(() => {
+            downloadBtn.innerHTML = originalHtml;
+            downloadBtn.disabled = false;
+          }, 2000);
+        }
+        
+        showNotification(response.error || 'Download failed', 'error');
+        
         // Fallback: Try to open the iframe URL in a new tab
-        alert('Could not extract video. Opening in new tab instead.');
-        window.open(iframeSrc, '_blank');
+        if (confirm('Could not extract video. Open in new tab instead?')) {
+          window.open(iframeSrc, '_blank');
+        }
       }
     });
   }
   
-  // Navigate to a specific index
+  // Navigate to a specific index with transition
   function navigateToIndex(index) {
+    isTransitioning = true;
+    
     const iframe = document.querySelector('iframe');
     if (iframe) {
-      iframe.src = saintLinks[index];
+      // Fade out
+      iframe.style.opacity = '0';
       
-      // Update counter
-      const counter = document.getElementById('gallery-counter');
-      if (counter) {
-        counter.textContent = `${index + 1} / ${saintLinks.length}`;
-      }
+      setTimeout(() => {
+        // Change source
+        iframe.src = saintLinks[index];
+        
+        // Update counter
+        const counter = document.getElementById('gallery-counter');
+        if (counter) {
+          counter.textContent = `${index + 1} / ${saintLinks.length}`;
+        }
+        
+        // Fade in
+        setTimeout(() => {
+          iframe.style.opacity = '1';
+          isTransitioning = false;
+        }, 300);
+      }, 300);
+    } else {
+      isTransitioning = false;
     }
+  }
+  
+  // Show notification
+  function showNotification(message, type = 'info') {
+    // Check if notification container exists, create if not
+    let notificationContainer = document.getElementById('notification-container');
+    
+    if (!notificationContainer) {
+      notificationContainer = document.createElement('div');
+      notificationContainer.id = 'notification-container';
+      notificationContainer.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        z-index: 9999;
+      `;
+      document.body.appendChild(notificationContainer);
+    }
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.style.cssText = `
+      background-color: ${type === 'success' ? '#34a853' : type === 'error' ? '#ea4335' : '#4285f4'};
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      font-size: 14px;
+      transform: translateX(120%);
+      transition: transform 0.3s ease;
+    `;
+    
+    // Add icon based on type
+    let icon = '';
+    if (type === 'success') {
+      icon = '<svg width="16" height="16" style="margin-right: 8px;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M20 6L9 17L4 12" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    } else if (type === 'error') {
+      icon = '<svg width="16" height="16" style="margin-right: 8px;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 8V12M12 16H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    } else {
+      icon = '<svg width="16" height="16" style="margin-right: 8px;" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M13 16H12V12H11M12 8H12.01M21 12C21 16.9706 16.9706 21 12 21C7.02944 21 3 16.9706 3 12C3 7.02944 7.02944 3 12 3C16.9706 3 21 7.02944 21 12Z" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    }
+    
+    notification.innerHTML = `${icon}${message}`;
+    
+    // Add notification to container
+    notificationContainer.appendChild(notification);
+    
+    // Trigger animation
+    setTimeout(() => {
+      notification.style.transform = 'translateX(0)';
+    }, 10);
+    
+    // Remove notification after delay
+    setTimeout(() => {
+      notification.style.transform = 'translateX(120%)';
+      setTimeout(() => {
+        notificationContainer.removeChild(notification);
+      }, 300);
+    }, 3000);
   }
   
   // Set up message listeners

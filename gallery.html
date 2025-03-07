@@ -2,31 +2,32 @@
 <html>
 <head>
   <title>Saint Gallery</title>
-  <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      width: 100%;
-      background-color: #000;
-      color: #fff;
-      font-family: Arial, sans-serif;
-    }
-    #gallery-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    iframe {
-      max-width: 100%;
-      max-height: 90vh;
-    }
-  </style>
+  <link rel="stylesheet" href="gallery-styles.css">
   <script src="saint-gallery-module.js"></script>
   <script src="gallery-init.js"></script>
 </head>
 <body>
-  <div id="gallery-container">Loading gallery...</div>
+  <div class="app-container">
+    <header>
+      <h1>Saint Gallery</h1>
+    </header>
+    
+    <div id="gallery-container">
+      <div class="loading-indicator">
+        <div class="spinner"></div>
+        <p>Loading gallery...</p>
+      </div>
+    </div>
+    
+    <div id="no-content" style="display: none;">
+      <div class="empty-state">
+        <svg width="120" height="120" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M21 19V5C21 3.9 20.1 3 19 3H5C3.9 3 3 3.9 3 5V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19ZM8.5 13.5L11 16.51L14.5 12L19 18H5L8.5 13.5Z" fill="#555"/>
+        </svg>
+        <h2>No content available</h2>
+        <p>Visit forum threads and collect links first</p>
+      </div>
+    </div>
+  </div>
 </body>
 </html>
