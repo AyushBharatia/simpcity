@@ -97,28 +97,92 @@ function initializeSaintGallery() {
 
 // Update the UI
 function updateStats() {
-  sendMessageToActiveTab({ action: 'getStats' }, (response) => {
-    if (!response) return;
-    
-    document.getElementById('saint-count').textContent = response.saintLinks || 0;
-    document.getElementById('file-count').textContent = response.fileLinks || 0;
-    document.getElementById('redgifs-count').textContent = response.redgifsLinks || 0;
-    document.getElementById('total-count').textContent = response.totalLinks || 0;
-    
-    // Update the gallery button state
-    const galleryBtn = document.getElementById('open-gallery-btn');
-    if (response.saintLinks > 0) {
-      galleryBtn.disabled = false;
-    } else {
-      galleryBtn.disabled = true;
-    }
-  });
-}
+    sendMessageToActiveTab({ action: 'getStats' }, (response) => {
+      if (!response) return;
+      
+      document.getElementById('saint-count').textContent = response.saintLinks || 0;
+      document.getElementById('file-count').textContent = response.fileLinks || 0;
+      document.getElementById('redgifs-count').textContent = response.redgifsLinks || 0;
+      document.getElementById('total-count').textContent = response.totalLinks || 0;
+      
+      // Update the gallery buttons state
+      const galleryBtn = document.getElementById('open-gallery-btn');
+      if (response.saintLinks > 0) {
+        galleryBtn.disabled = false;
+      } else {
+        galleryBtn.disabled = true;
+      }
+      
+      // Also update Bunkr gallery button
+      updateBunkrGalleryButton();
+    });
+  }
 
 // Set status message
 function setStatus(message) {
   document.getElementById('status').textContent = message;
 }
+
+function initializeBunkrGallery() {
+    // Add a new button to your popup.html
+    const gallerySection = document.querySelector('.button-group');
+    
+    // Create a new button for Bunkr Gallery if it doesn't exist
+    if (!document.getElementById('open-bunkr-gallery-btn')) {
+      const bunkrGalleryBtn = document.createElement('button');
+      bunkrGalleryBtn.id = 'open-bunkr-gallery-btn';
+      bunkrGalleryBtn.className = 'feature';
+      bunkrGalleryBtn.innerHTML = '<i class="fas fa-film"></i>Open Bunkr Gallery';
+      
+      // Insert after the Saint Gallery button
+      const saintGalleryBtn = document.getElementById('open-gallery-btn');
+      if (saintGalleryBtn && saintGalleryBtn.parentNode) {
+        saintGalleryBtn.parentNode.insertBefore(bunkrGalleryBtn, saintGalleryBtn.nextSibling);
+      } else {
+        gallerySection.appendChild(bunkrGalleryBtn);
+      }
+      
+      // Add event listener
+      bunkrGalleryBtn.addEventListener('click', () => {
+        // Check if there are any Bunkr links first
+        chrome.storage.local.get(['fileLinks'], (result) => {
+          const fileLinks = result.fileLinks || [];
+          
+          // Filter for bunkr links
+          const bunkrLinks = fileLinks.filter(link => 
+            link.includes('bunkr.') || 
+            link.includes('bunkrr.') || 
+            link.includes('bunker.')
+          );
+          
+          if (bunkrLinks.length === 0) {
+            setStatus('No Bunkr links available to view');
+            return;
+          }
+          
+          // Send a message to open the gallery
+          chrome.runtime.sendMessage({ 
+            action: 'openBunkrGallery' 
+          }, (response) => {
+            if (chrome.runtime.lastError) {
+              console.error('Error opening Bunkr gallery:', chrome.runtime.lastError);
+              
+              // Fallback: Create a new tab
+              chrome.tabs.create({ url: chrome.runtime.getURL('bunkr-gallery.html') });
+            } else if (response && response.success) {
+              setStatus('Opening Bunkr Gallery');
+            } else {
+              setStatus('Failed to open gallery');
+            }
+          });
+        });
+      });
+    }
+    
+    // Update button state based on available links
+    updateBunkrGalleryButton();
+  }
+  
 
 // Initialize popup
 document.addEventListener('DOMContentLoaded', () => {
@@ -225,7 +289,28 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Initialize Saint Gallery module
   initializeSaintGallery();
+  initializeBunkrGallery();
 });
+
+function updateBunkrGalleryButton() {
+    const bunkrGalleryBtn = document.getElementById('open-bunkr-gallery-btn');
+    if (!bunkrGalleryBtn) return;
+    
+    chrome.storage.local.get(['fileLinks'], (result) => {
+      const fileLinks = result.fileLinks || [];
+      
+      // Filter for bunkr links
+      const bunkrLinks = fileLinks.filter(link => 
+        link.includes('bunkr.') || 
+        link.includes('bunkrr.') || 
+        link.includes('bunker.')
+      );
+      
+      // Enable/disable based on presence of links
+      bunkrGalleryBtn.disabled = bunkrLinks.length === 0;
+    });
+  }
+
 
 // Listen for messages from content script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
